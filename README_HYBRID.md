@@ -1,0 +1,553 @@
+# Hybrid Literature Review Agent 🧬
+
+**Real-Time Learning System with Three Learning Layers**
+
+This agent learns from YOUR feedback in real-time, giving you immediate improvements AND long-term learning through actual weight updates.
+
+---
+
+## 🎯 What Makes This "Hybrid"?
+
+### Three Learning Layers:
+
+```
+┌──────────────────────────────────────────────────────┐
+│ LAYER 1: Session Memory (Instant)                   │
+│ "Try again with more stats" → Immediate retry       │
+│ Lasts: Current session only                         │
+│ Speed: Instant ⚡                                    │
+└──────────────────────────────────────────────────────┘
+              ↓
+┌──────────────────────────────────────────────────────┐
+│ LAYER 2: Pattern Memory (Persistent)                │
+│ "needs stats" → Always include stats in future      │
+│ Lasts: Forever (saved to disk)                      │
+│ Speed: Instant ⚡                                    │
+└──────────────────────────────────────────────────────┘
+              ↓
+┌──────────────────────────────────────────────────────┐
+│ LAYER 3: LoRA Training (Deep Learning)              │
+│ Every 5 examples → Real weight updates on Colab     │
+│ Lasts: Forever (new model file)                     │
+│ Speed: 20-30 minutes ⏱️                             │
+└──────────────────────────────────────────────────────┘
+```
+
+**YOU GET:**
+- ✅ Instant feedback (see changes immediately)
+- ✅ Persistent learning (patterns survive restarts)
+- ✅ True learning (weights actually update via LoRA)
+
+---
+
+## 🚀 Quick Start (5 Minutes)
+
+### 1. Install Ollama
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+ollama serve
+```
+
+### 2. Pull Model (in new terminal)
+
+```bash
+ollama pull llama3.2:3b
+```
+
+### 3. Install Python Packages
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Run Training
+
+```bash
+python train_hybrid.py
+```
+
+---
+
+## 💡 How It Works
+
+### Example Workflow:
+
+#### **Example 1:** "Review CRISPR"
+
+```
+Agent: [generates review]
+You: "Needs more statistics" (Rating: 6/10)
+
+WHAT HAPPENS:
+├─ Session Memory: Adds "needs statistics"
+├─ Pattern Memory: Learns "always include statistics"
+└─ Background: Saves example #1
+
+Agent: "Want to try again with this feedback?"
+You: "yes"
+
+Agent: [regenerates with statistics!]
+You: "Better!" (Rating: 8/10)
+```
+
+#### **Example 2:** "Review Quantum Computing"
+
+```
+Agent: [generates with statistics automatically!]
+       ↑ Pattern memory remembered!
+       
+You: "Good but needs 2024 papers" (Rating: 7/10)
+
+WHAT HAPPENS:
+├─ Pattern Memory: Learns "prioritize recent papers"
+└─ Background: Saves example #2
+```
+
+#### **Example 5:** (Checkpoint!)
+
+```
+System: "🎓 5 examples collected! Train with LoRA?"
+You: "yes"
+
+System: Generates Colab notebook
+You: Upload to Colab, run, wait 30 min
+System: Model weights updated! Now truly smarter!
+```
+
+---
+
+## 📁 Project Structure
+
+```
+hybrid-agent/
+├── train_hybrid.py           # Main script (run this!)
+├── hybrid_agent.py           # Core agent
+├── pattern_memory.py         # Persistent pattern learning
+├── session_memory.py         # In-session learning
+├── background_trainer.py     # LoRA training
+├── search.py                 # Paper search
+├── models.py                 # Data structures
+│
+├── memory/
+│   └── pattern_memory.json   # Learned patterns (persistent)
+│
+├── reviews/
+│   └── review_*.md           # Generated reviews
+│
+├── training/
+│   ├── checkpoints/          # Training data
+│   └── notebooks/            # Colab notebooks
+│
+└── models/
+    └── checkpoint_X/         # Trained LoRA adapters
+```
+
+---
+
+## 🎓 Training Workflow
+
+### Phase 1: Collect Examples (You provide feedback)
+
+```bash
+$ python train_hybrid.py
+
+[Example 1] Research query: CRISPR gene editing
+
+🔍 Searching papers... Found 28 papers
+✍️  Generating review...
+
+📊 Self-assessment: 6.5/10
+Papers used: 28
+
+👤 Your rating (1-10): 7
+
+💬 What could be better?
+> needs more recent papers from 2024
+> 
+
+✓ Session memory updated (immediate effect)
+✓ Pattern memory updated (permanent learning)
+   ✓ Learned: Focus on recent papers
+
+✅ Example 1 complete!
+```
+
+### Phase 2: LoRA Training (Every 5 examples)
+
+```bash
+🎓 LORA TRAINING CHECKPOINT
+============================================================
+
+You've collected 5 examples!
+Excellent examples (8+): 3
+
+Ready for LoRA training (real weight updates).
+
+Options:
+  1. Generate Colab notebook now (recommended)
+  2. Train later (collect more examples)
+  3. Skip (just use pattern memory)
+
+Choice: 1
+
+✅ COLAB NOTEBOOK GENERATED
+============================================================
+
+File: training/notebooks/lora_checkpoint_1.ipynb
+
+Next steps:
+1. Upload this notebook to Google Colab
+2. Runtime → Change runtime type → GPU (T4)
+3. Runtime → Run all
+4. Wait ~20-30 minutes
+5. Download the 'lora_adapter' folder
+6. Place in your project as: models/checkpoint_1/
+7. Resume training here (model will auto-load!)
+
+Press Enter when ready to continue training...
+```
+
+### Phase 3: Use Trained Model
+
+```bash
+[Example 6] Research query: gene therapy
+
+✍️  Generating review...
+   ↳ Using trained model: checkpoint_1
+   ↳ Applying 5 learned patterns
+
+[Review is significantly better because:]
+- Base model improved via LoRA ✅
+- Pattern memory applies ✅
+- Session memory available ✅
+```
+
+---
+
+## 🔬 What Each Component Does
+
+### 1. **Session Memory** (session_memory.py)
+
+**What:** Temporary feedback for current session  
+**How:** Adds feedback to conversation context  
+**Lasts:** Current session only  
+**Use Case:** "Try again with more stats"
+
+**Example:**
+```python
+You: "Review CRISPR"
+Agent: [review A]
+You: "Bad, needs stats"
+Session: Adds to context
+Agent: [review B with stats] ✓
+```
+
+---
+
+### 2. **Pattern Memory** (pattern_memory.py)
+
+**What:** Persistent learning via prompt engineering  
+**How:** Extracts patterns, saves to JSON, injects in prompts  
+**Lasts:** Forever (survives restarts)  
+**Use Case:** "Always include statistics"
+
+**Example:**
+```python
+Session 1:
+  Feedback: "needs statistics"
+  Pattern: always_include.add("statistical results")
+  
+Session 2 (next day):
+  Prompt includes: "ALWAYS: statistical results"
+  All reviews have statistics ✓
+```
+
+**File: `memory/pattern_memory.json`**
+```json
+{
+  "always_include": [
+    "Include specific statistical results",
+    "Prioritize recent papers from 2023-2024"
+  ],
+  "avoid": [
+    "Vague statements"
+  ],
+  "quality_thresholds": {
+    "min_papers": 15
+  }
+}
+```
+
+---
+
+### 3. **Background LoRA Training** (background_trainer.py)
+
+**What:** Real weight updates via LoRA  
+**How:** Collects examples → Generates Colab notebook → You train  
+**Lasts:** Forever (new model weights)  
+**Use Case:** Deep learning after 5-10 examples
+
+**Workflow:**
+```
+Examples 1-5: Collecting...
+Example 5: Generate notebook
+You: Train on Colab (20-30 min)
+Download: lora_adapter/
+System: Load trained model
+Result: Model is genuinely smarter ✓
+```
+
+---
+
+## 📊 Monitoring Progress
+
+### During Training:
+
+```bash
+# See learned patterns
+[Example X] Research query: patterns
+
+LEARNED PATTERNS
+============================================================
+
+✓ ALWAYS INCLUDE:
+  - Include specific statistical results
+  - Prioritize recent papers from 2023-2024
+  - Analyze research methodology
+
+✗ AVOID:
+  - Vague statements
+
+📊 QUALITY REQUIREMENTS:
+  - min_papers: 15
+
+============================================================
+```
+
+### Check Statistics:
+
+```bash
+# See training stats
+[Example X] Research query: stats
+
+TRAINING STATISTICS
+============================================================
+
+📊 Examples Collected:
+   Total: 8
+   Excellent (8+): 5
+   Average rating: 7.6/10
+
+🧠 Pattern Memory:
+   Learned patterns: 7
+
+🎓 LoRA Training:
+   Next checkpoint at: 10 examples
+   Examples until trigger: 2
+
+============================================================
+```
+
+---
+
+## 🎯 Tips for Best Results
+
+### 1. **Be Specific in Feedback**
+
+❌ Bad: "This is bad"  
+✅ Good: "Needs more statistical analysis with p-values"
+
+❌ Bad: "Better"  
+✅ Good: "Needs papers from 2024, only has 2023"
+
+### 2. **Honest Ratings**
+
+- Rate what you ACTUALLY think
+- Don't always give 10/10 (model won't learn)
+- Don't always give 1/10 (discouraging)
+
+### 3. **Diverse Topics**
+
+Train on variety of topics:
+- ✅ CRISPR, quantum computing, climate change, AI ethics
+- ❌ All CRISPR papers (too narrow)
+
+### 4. **Use Iteration**
+
+If rating < 7:
+- Try "regenerate with feedback"
+- See immediate improvement
+- Teaches session memory
+
+### 5. **LoRA Training**
+
+- Do it every 5-10 examples
+- Needs 3+ excellent examples (8+)
+- Worth the 30 min wait!
+
+---
+
+## ⚙️ Configuration
+
+### Change Model:
+
+Edit `train_hybrid.py`:
+```python
+agent = HybridLiteratureAgent(
+    model="llama3.2:3b",  # Change this
+    lora_trigger=5
+)
+```
+
+**Options:**
+- `llama3.2:1b` - Fastest
+- `llama3.2:3b` - **Recommended** (good balance)
+- `mistral:7b` - Better quality, slower
+- `deepseek-r1:7b` - Great reasoning
+
+### Change LoRA Trigger:
+
+```python
+agent = HybridLiteratureAgent(
+    model="llama3.2:3b",
+    lora_trigger=10  # Train every 10 instead of 5
+)
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### "Ollama connection failed"
+
+```bash
+# Start Ollama
+ollama serve
+
+# In another terminal
+ollama pull llama3.2:3b
+```
+
+### "No papers found"
+
+- Check internet connection
+- Try broader query
+- Verify APIs accessible
+
+### "Pattern memory not persisting"
+
+- Check `memory/pattern_memory.json` exists
+- File should have learned patterns
+- If empty, patterns not being saved
+
+### "LoRA notebook fails on Colab"
+
+- Make sure you selected GPU runtime
+- Runtime → Change runtime type → T4 GPU
+- Check you have enough free Colab hours
+
+---
+
+## 📖 Understanding the Code
+
+All files have **extensive comments** explaining:
+- What each function does
+- Why it's needed
+- How it works
+- What changes (or doesn't change)
+
+**Start reading:**
+1. `pattern_memory.py` - Simplest, persistent learning
+2. `session_memory.py` - In-conversation learning
+3. `hybrid_agent.py` - How everything combines
+4. `background_trainer.py` - LoRA training
+5. `train_hybrid.py` - Main interface
+
+---
+
+## 🚀 Next Steps After Training
+
+### 1. **Use Trained Model**
+
+After LoRA training:
+```bash
+# Your model is now at models/checkpoint_1/
+# System auto-loads it next session
+# Continue training from improved baseline!
+```
+
+### 2. **Export for Production**
+
+Convert to Ollama model:
+```bash
+# (Advanced - will provide script if needed)
+# Converts LoRA adapter to full Ollama model
+# Can then: ollama run my-litreview-expert
+```
+
+### 3. **MAS Integration**
+
+Use trained agent in multi-agent system:
+```python
+from hybrid_agent import HybridLiteratureAgent
+
+class ResearchMAS:
+    def __init__(self):
+        self.lit_agent = HybridLiteratureAgent()
+        # Other agents...
+```
+
+---
+
+## 🎓 Key Concepts
+
+### Q: Does the model REALLY learn?
+
+**A:** Yes! Three ways:
+1. Session Memory - Temporary (just this conversation)
+2. Pattern Memory - Persistent prompts (forever)
+3. LoRA - **TRUE learning** (weights change)
+
+### Q: What's the difference from Phase 1?
+
+**A:** Phase 1 just collected data. This:
+- Learns patterns INSTANTLY (pattern memory)
+- Allows iteration WITHIN session (session memory)
+- Actually TRAINS model (LoRA every 5 examples)
+
+### Q: Do I need GPU?
+
+**A:** No! Colab provides free GPU.
+- Run training locally (no GPU needed)
+- Train on Colab when checkpoint triggers
+- Download weights back
+- Continue locally
+
+### Q: Can I skip LoRA?
+
+**A:** Yes! Just use pattern + session memory.
+- Still get instant learning
+- Still persistent
+- Just not "true" weight updates
+
+---
+
+## 📞 Need Help?
+
+1. Read the code comments (very detailed!)
+2. Check `memory/pattern_memory.json` (see learned patterns)
+3. Run with `stats` command (see progress)
+4. Check `reviews/` folder (see generated reviews)
+
+---
+
+**Happy Training! 🎓**
+
+Your model will genuinely improve as you provide feedback!
+
+---
+
+## 📜 License
+
+MIT - Free to use and modify

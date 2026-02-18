@@ -1,0 +1,21 @@
+# Hybrid Real-Time Learning System Requirements
+
+# Core dependencies
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# Academic APIs
+biopython>=1.81
+arxiv>=2.0.0
+
+# Ollama interface
+ollama>=0.1.0
+
+# Utilities
+tenacity>=8.2.0
+
+# For LoRA training (install separately when needed on Colab)
+# transformers>=4.35.0
+# peft>=0.6.0
+# accelerate>=0.24.0
+# bitsandbytes>=0.41.0

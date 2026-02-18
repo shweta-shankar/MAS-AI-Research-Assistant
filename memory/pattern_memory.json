@@ -1,0 +1,64 @@
+{
+  "always_include": [
+    "Maintain formal academic tone suitable for publication",
+    "Synthesize findings across multiple studies instead of summarizing individually",
+    "Discuss practical or real-world implications where applicable",
+    "Discuss trade-offs between accuracy, interpretability, and efficiency where relevant",
+    "Include specific statistical results (p-values, effect sizes, sample sizes)",
+    "Identify research gaps and future directions",
+    "Explain possible reasons for conflicting results across studies",
+    "Compare methodologies, datasets, and evaluation metrics across studies",
+    "Analyze experimental protocols and benchmarking practices",
+    "Assess robustness, reproducibility, and generalizability of findings",
+    "Ensure logical flow and clear narrative synthesis",
+    "Discuss assumptions, biases, and potential confounding factors",
+    "Highlight emerging trends and future research directions",
+    "Critically evaluate strengths and limitations of existing approaches",
+    "Identify areas of agreement and disagreement in the literature",
+    "Compare performance across benchmarks or datasets",
+    "Avoid unsupported claims and clearly ground statements in cited evidence",
+    "Identify unresolved questions, limitations, and research gaps",
+    "Analyze research methodology and study design",
+    "Organize the review into coherent conceptual themes",
+    "Discuss model architectures and training strategies where relevant",
+    "Situate the research within the broader scientific and historical context"
+  ],
+  "avoid": [
+    "Using vague statements like 'many studies show' without specifics",
+    "Overgeneralizing beyond available evidence",
+    "Hallucinating methods, results, or datasets",
+    "Making claims not supported by cited studies",
+    "Summarizing papers one by one without synthesis",
+    "Providing superficial analysis without critique",
+    "Vague or general statements without specific evidence",
+    "Ignoring contradictory findings",
+    "Repeating abstract text verbatim",
+    "Using informal or conversational tone"
+  ],
+  "quality_thresholds": {
+    "synthesis_depth": "high",
+    "critical_analysis": "required",
+    "citation_grounding": "required",
+    "coherence": "high",
+    "technical_accuracy": "high"
+  },
+  "style_preferences": [
+    "Use of domain-appropriate terminology",
+    "Concise but precise explanations",
+    "Formal academic prose",
+    "Clear logical transitions between sections",
+    "Provide comprehensive and detailed analysis",
+    "Neutral and objective tone"
+  ],
+  "requirements": [
+    "Clearly identify research gaps",
+    "Ensure high-quality analysis meeting all standards",
+    "Ground claims in the provided literature",
+    "Ensure conclusions are supported by evidence",
+    "Maintain internal consistency and logical flow",
+    "Cite all claims using [1], [2], [3] format",
+    "Ensure high-quality analysis meeting academic standards",
+    "Provide critical comparison across studies"
+  ],
+  "last_updated": "2026-02-16T01:56:32.906302"
+}

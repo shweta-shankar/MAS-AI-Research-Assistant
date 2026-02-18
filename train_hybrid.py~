@@ -1,0 +1,447 @@
+#!/usr/bin/env python3
+"""
+HYBRID TRAINING - Main Script
+
+This is what you run to train your literature review agent.
+
+FEATURES:
+- Real-time learning (you see changes immediately)
+- Pattern persistence (survives restarts)
+- LoRA checkpoints (actual weight updates)
+- Easy interface (just answer prompts)
+
+RUN:
+    python train_hybrid.py
+"""
+
+import sys
+import os
+from datetime import datetime
+
+from hybrid_agent import HybridLiteratureAgent
+
+
+def print_header():
+    """Print welcome header"""
+    print("\n" + "="*70)
+    print(" " * 10 + "HYBRID LITERATURE REVIEW AGENT")
+    print(" " * 15 + "Real-Time Learning System")
+    print("="*70)
+    print()
+    print("This agent learns from YOUR feedback in three ways:")
+    print("  1. Session Memory - Instant iteration in same conversation")
+    print("  2. Pattern Memory - Persistent patterns across all sessions")
+    print("  3. LoRA Training - Real weight updates every 5 examples")
+    print()
+    print("="*70 + "\n")
+
+
+def save_review_to_file(query: str, review: str, rating: int, iteration: int = 1) -> str:
+    """
+    Save review to file
+    
+    Args:
+        query: Research query
+        review: Generated review
+        rating: User rating
+        iteration: Iteration number
+    
+    Returns:
+        Filename
+    """
+    # Create safe filename
+    safe_query = "".join(c if c.isalnum() or c == ' ' else '_' for c in query)
+    safe_query = safe_query.replace(' ', '_')[:40]
+    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    if iteration > 1:
+        filename = f"reviews/review_{safe_query}_iter{iteration}_{timestamp}.md"
+    else:
+        filename = f"reviews/review_{safe_query}_{timestamp}.md"
+    
+    # Ensure directory exists
+    os.makedirs("reviews", exist_ok=True)
+    
+    # Write review
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(f"# Literature Review: {query}\n\n")
+        f.write(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"**Your Rating:** {rating}/10\n")
+        if iteration > 1:
+            f.write(f"**Iteration:** {iteration}\n")
+        f.write(f"\n---\n\n")
+        f.write(review)
+    
+    return filename
+
+
+def training_loop():
+    """
+    Main training loop
+    
+    WORKFLOW:
+    1. Initialize agent
+    2. Get query from user
+    3. Generate review
+    4. Get feedback
+    5. Option to iterate (session memory)
+    6. Learn patterns (pattern memory)
+    7. Check if should train (LoRA)
+    8. Repeat
+    """
+    
+    print_header()
+    
+    # Initialize agent
+    print("Initializing hybrid agent...\n")
+    agent = HybridLiteratureAgent(
+        model="llama3.2:3b",  # Fast, good quality
+        lora_trigger=5        # Train every 5 examples
+    )
+    
+    # Training counter
+    examples_count = 0
+    session_queries = []
+    
+    print("\n" + "="*70)
+    print("READY TO TRAIN!")
+    print("="*70)
+    print("\nCommands:")
+    print("  - Enter research query to start")
+    print("  - Type 'patterns' to see learned patterns")
+    print("  - Type 'stats' to see training statistics")
+    print("  - Type 'quit' to exit")
+    print("="*70 + "\n")
+    
+    # Main loop
+    while True:
+        try:
+            # ═══════════════════════════════════════════════════════
+            # GET QUERY
+            # ═══════════════════════════════════════════════════════
+            
+            examples_count_display = examples_count + 1
+            query = input(f"\n[Example {examples_count_display}] Research query: ").strip()
+            
+            # Special commands
+            if query.lower() in ['quit', 'exit', 'q']:
+                print("\n👋 Ending training session...")
+                show_final_summary(agent, examples_count)
+                break
+            
+            if query.lower() == 'patterns':
+                agent.show_learned_patterns()
+                continue
+            
+            if query.lower() == 'stats':
+                show_training_stats(agent)
+                continue
+            
+            if not query:
+                continue
+            
+            session_queries.append(query)
+            
+            # ═══════════════════════════════════════════════════════
+            # GENERATE REVIEW
+            # ═══════════════════════════════════════════════════════
+            
+            review, papers, self_score, _ = agent.generate_review(query)
+            
+            # ═══════════════════════════════════════════════════════
+            # SHOW REVIEW
+            # ═══════════════════════════════════════════════════════
+            
+            # Save to file
+            temp_filename = save_review_to_file(query, review, 0, iteration=1)
+            
+            print(f"\n{'='*70}")
+            print("REVIEW GENERATED")
+            print("="*70)
+            print(f"\n💾 Full review saved: {temp_filename}")
+            print(f"   (Open this file to read the complete review)\n")
+            print("How would you like to view it?")
+            print("  1. Full review here (may be long)")
+            print("  2. First 500 characters")
+            print("  3. Skip (already opened file)")
+            
+            view_choice = input("\nChoice (1-3): ").strip()
+            
+            if view_choice == '1':
+                print(f"\n{'='*70}")
+                print("FULL REVIEW")
+                print("='*70}\n")
+                print(review)
+                print(f"\n{'='*70}")
+            
+            elif view_choice == '2':
+                print(f"\n{'='*70}")
+                print("PREVIEW")
+                print("="*70 + "\n")
+                print(review[:500])
+                print(f"\n... (Total: {len(review)} characters)")
+                print(f"\nOpen '{temp_filename}' for full review")
+                print("="*70)
+            
+            # ═══════════════════════════════════════════════════════
+            # GET FEEDBACK
+            # ═══════════════════════════════════════════════════════
+            
+            print(f"\n{'='*70}")
+            print("YOUR FEEDBACK")
+            print("="*70)
+            print(f"Self-assessment: {self_score:.1f}/10")
+            print(f"Papers used: {len(papers)}\n")
+            
+            # Rating
+            while True:
+                try:
+                    rating_input = input("👤 Your rating (1-10): ").strip()
+                    rating = int(rating_input)
+                    if 1 <= rating <= 10:
+                        break
+                    print("Please enter 1-10")
+                except ValueError:
+                    print("Please enter a number")
+                except KeyboardInterrupt:
+                    print("\n\nTraining interrupted")
+                    raise
+            
+            # Feedback text
+            print("\n💬 What could be better? (or 'none' if excellent)")
+            print("   Type your feedback, press Enter twice when done:\n")
+            
+            feedback_lines = []
+            empty_count = 0
+            
+            while empty_count < 2:
+                try:
+                    line = input().strip()
+                    if line.lower() == 'none':
+                        feedback_lines = ["Excellent, no changes needed"]
+                        break
+                    if line:
+                        feedback_lines.append(line)
+                        empty_count = 0
+                    else:
+                        empty_count += 1
+                except KeyboardInterrupt:
+                    break
+            
+            feedback = " ".join(feedback_lines) if feedback_lines else "No specific feedback"
+            
+            # Update saved file with rating
+            final_filename = save_review_to_file(query, review, rating, iteration=1)
+            
+            # ═══════════════════════════════════════════════════════
+            # PROCESS FEEDBACK (LEARNING HAPPENS HERE!)
+            # ═══════════════════════════════════════════════════════
+            
+            lora_triggered = agent.process_feedback(query, review, rating, feedback)
+            
+            # ═══════════════════════════════════════════════════════
+            # OFFER ITERATION (If rating low)
+            # ═══════════════════════════════════════════════════════
+            
+            iteration_count = 1
+            
+            if rating < 7:
+                print(f"\n{'='*70}")
+                print("ITERATION OPTION")
+                print("="*70)
+                print("\nYour rating is below 7. Want to try again with your feedback?")
+                print("(The model will regenerate considering what you just said)")
+                
+                retry = input("\nRegenerate? (y/n): ").strip().lower()
+                
+                while retry == 'y' and iteration_count < 3:
+                    iteration_count += 1
+                    
+                    # Regenerate with session memory
+                    improved_review, improved_score = agent.regenerate_with_feedback(
+                        query, papers
+                    )
+                    
+                    # Save iteration
+                    iter_filename = save_review_to_file(
+                        query, improved_review, 0, iteration=iteration_count
+                    )
+                    
+                    # Show improved review
+                    print(f"\n{'='*70}")
+                    print(f"ITERATION {iteration_count}")
+                    print("="*70)
+                    print(f"\n💾 Saved: {iter_filename}\n")
+                    
+                    view = input("View? (1=full, 2=preview, 3=skip): ").strip()
+                    
+                    if view == '1':
+                        print(f"\n{improved_review}\n")
+                    elif view == '2':
+                        print(f"\n{improved_review[:500]}...\n")
+                    
+                    # New rating
+                    print(f"Self-assessment: {improved_score:.1f}/10")
+                    
+                    try:
+                        new_rating = int(input("Your new rating (1-10): ").strip())
+                        rating = new_rating
+                        review = improved_review
+                        
+                        # Update final file
+                        final_filename = save_review_to_file(
+                            query, review, rating, iteration=iteration_count
+                        )
+                        
+                        if new_rating >= 7:
+                            print("\n✅ Satisfied! Moving on...")
+                            break
+                        else:
+                            retry = input("\nTry again? (y/n): ").strip().lower()
+                    
+                    except:
+                        break
+            
+            # ═══════════════════════════════════════════════════════
+            # LORA TRAINING CHECKPOINT
+            # ═══════════════════════════════════════════════════════
+            
+            if lora_triggered:
+                handle_lora_training(agent)
+            
+            # Increment counter
+            examples_count += 1
+            
+            # Show progress
+            print(f"\n{'='*70}")
+            print(f"✅ Example {examples_count} complete!")
+            print(f"   Saved: {final_filename}")
+            print(f"   Rating: {rating}/10")
+            print("="*70)
+            
+        except KeyboardInterrupt:
+            print("\n\nTraining interrupted")
+            show_final_summary(agent, examples_count)
+            break
+        
+        except Exception as e:
+            print(f"\n❌ Error: {e}")
+            import traceback
+            traceback.print_exc()
+            continue
+
+
+def handle_lora_training(agent):
+    """Handle LoRA training checkpoint"""
+    
+    stats = agent.get_training_stats()
+    
+    print(f"\n{'='*70}")
+    print("🎓 LORA TRAINING CHECKPOINT")
+    print("="*70)
+    print(f"\nYou've collected {stats['total_examples']} examples!")
+    print(f"Excellent examples (8+): {stats['excellent_examples']}")
+    print(f"\nReady for LoRA training (real weight updates).")
+    print(f"\nOptions:")
+    print(f"  1. Generate Colab notebook now (recommended)")
+    print(f"  2. Train later (collect more examples)")
+    print(f"  3. Skip (just use pattern memory)")
+    
+    choice = input("\nChoice (1-3): ").strip()
+    
+    if choice == '1':
+        notebook_path = agent.prepare_lora_training()
+        
+        print(f"\n{'='*70}")
+        print("NEXT STEPS")
+        print("="*70)
+        print(f"\n1. Upload {notebook_path} to Google Colab")
+        print(f"2. Runtime → Change runtime type → GPU (T4)")
+        print(f"3. Runtime → Run all")
+        print(f"4. Wait ~20-30 minutes")
+        print(f"5. Download the 'lora_adapter' folder")
+        print(f"6. Place in your project as: models/checkpoint_X/")
+        print(f"7. Resume training here (model will auto-load!)")
+        print(f"\n{'='*70}")
+        
+        input("\nPress Enter when ready to continue training...")
+    
+    elif choice == '2':
+        print("\n✓ Will train later. Continue collecting examples...")
+    
+    else:
+        print("\n✓ Skipping LoRA. Using pattern memory only...")
+
+
+def show_training_stats(agent):
+    """Show current training statistics"""
+    
+    stats = agent.get_training_stats()
+    pattern_count = agent.pattern_memory.count_patterns()
+    
+    print(f"\n{'='*70}")
+    print("TRAINING STATISTICS")
+    print("="*70)
+    
+    print(f"\n📊 Examples Collected:")
+    print(f"   Total: {stats['total_examples']}")
+    print(f"   Excellent (8+): {stats['excellent_examples']}")
+    print(f"   Average rating: {stats['average_rating']:.1f}/10")
+    
+    print(f"\n🧠 Pattern Memory:")
+    print(f"   Learned patterns: {pattern_count}")
+    
+    print(f"\n🎓 LoRA Training:")
+    print(f"   Next checkpoint at: {stats['next_trigger_at']} examples")
+    print(f"   Examples until trigger: {stats['examples_until_trigger']}")
+    
+    print(f"\n{'='*70}\n")
+
+
+def show_final_summary(agent, examples_count):
+    """Show final summary when exiting"""
+    
+    stats = agent.get_training_stats()
+    
+    print(f"\n{'='*70}")
+    print("TRAINING SESSION SUMMARY")
+    print("="*70)
+    
+    print(f"\n✅ Session complete!")
+    print(f"\n📊 Statistics:")
+    print(f"   Examples this session: {examples_count}")
+    print(f"   Total examples: {stats['total_examples']}")
+    print(f"   Excellent (8+): {stats['excellent_examples']}")
+    
+    print(f"\n🧠 Learning:")
+    print(f"   Patterns learned: {agent.pattern_memory.count_patterns()}")
+    print(f"   Session memory: Cleared on exit")
+    print(f"   LoRA checkpoints: Saved permanently")
+    
+    if stats['examples_until_trigger'] <= 2:
+        print(f"\n💡 Tip: You're close to next training checkpoint!")
+        print(f"   {stats['examples_until_trigger']} more examples to trigger LoRA training")
+    
+    print(f"\n💾 Data saved:")
+    print(f"   Reviews: ./reviews/")
+    print(f"   Pattern memory: ./memory/pattern_memory.json")
+    print(f"   Training data: ./training/checkpoints/")
+    
+    print(f"\n👋 Thanks for training!")
+    print(f"   Your model has learned from your feedback.")
+    print(f"   Patterns will persist in your next session!")
+    
+    print(f"\n{'='*70}\n")
+
+
+if __name__ == "__main__":
+    try:
+        training_loop()
+    except KeyboardInterrupt:
+        print("\n\n👋 Goodbye!\n")
+    except Exception as e:
+        print(f"\n❌ Fatal error: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
