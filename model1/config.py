@@ -1,0 +1,21 @@
+# config.py — Central configuration for the repo agent
+
+# Ollama model to use
+OLLAMA_MODEL = "qwen2.5:7b"  # swap to "mistral", "codellama", etc. as needed
+OLLAMA_BASE_URL = "http://localhost:11434"
+
+# Gitingest API endpoint (online, no cloning needed)
+GITINGEST_API_URL = "https://gitingest.com"
+
+# Agent loop settings
+MAX_ITERATIONS = 10       # Max tool-call rounds before forcing an answer
+MAX_TOKENS = 4096         # Max tokens per LLM response
+
+# Retrieval settings
+SEARCH_TOP_K = 5          # Number of chunks to return per search query
+CHUNK_SIZE = 100          # Lines per chunk when splitting file content
+
+# Citation enforcement
+REQUIRE_CITATIONS = True  # If True, answers without citations are flagged
+
+REPO_DUMP_PATH = "/home/shwetashankar/Shweta/Projects/Sem6_Project/gitSearch/goellab-digibone-8a5edab282632443.txt"

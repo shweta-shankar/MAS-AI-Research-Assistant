@@ -1,0 +1,65 @@
+# main.py — Entry point for the repo agent
+
+import sys
+from tools import fetch_repo
+from agent import run_agent
+from config import REPO_DUMP_PATH
+
+def main():
+    print("=" * 60)
+    print("  Repository Analysis Agent")
+    print("=" * 60)
+
+    # ── Step 1: Load the repo ─────────────────────────────────────
+    file_path = status = fetch_repo(REPO_DUMP_PATH
+    if not file_path:
+        print("No path provided. Exiting.")
+        sys.exit(1)
+
+    print(f"\nLoading repo dump from: {REPO_DUMP_PATH}")
+    status = fetch_repo(REPO_DUMP_PATH) 
+    print(f"Status: {status}\n")
+
+    if "Error" in status:
+        print("Failed to load repo. Exiting.")
+        sys.exit(1)
+
+    # ── Step 2: Question loop ─────────────────────────────────────
+    print("Repo loaded! Ask questions about it. Type 'exit' to quit.\n")
+
+    while True:
+        question = input("Your question: ").strip()
+
+        if question.lower() in ("exit", "quit", "q"):
+            print("Goodbye.")
+            break
+
+        if not question:
+            continue
+
+        print("\nThinking...\n")
+        result = run_agent(question)
+
+        # ── Print the answer ──────────────────────────────────────
+        print("\n" + "=" * 60)
+        print("ANSWER")
+        print("=" * 60)
+        print(result["answer"])
+
+        # ── Print citation verification ───────────────────────────
+        print("\n" + "-" * 60)
+        print(f"Citations found : {result['citations']}")
+        print(f"All verified    : {result['verified']}")
+
+        if result["unverified_citations"]:
+            print(f"⚠ Unverified citations (possible hallucination):")
+            for c in result["unverified_citations"]:
+                print(f"   - {c}")
+
+        print(f"\nIterations used : {result['iterations']}")
+        print(f"Tool calls made : {len(result['tool_calls'])}")
+        print("=" * 60 + "\n")
+
+
+if __name__ == "__main__":
+    main()

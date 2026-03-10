@@ -1,0 +1,211 @@
+(base) SSL~/Shweta/Projects/Sem6_Project/gitSearch/model2>python tools_test.py
+Keywords: ['segmentation', ' models']
+Unique results: 17
+CONTEXT LENGTH: 22037
+CONTEXT PREVIEW:
+File: README.md | Line: 42
+# CNN model for Segmental Bone Age assessment
+
+## Segmentation models
+Two separate segmentation models were trained to segment the carpals and the wrist region of the X-ray
+Segmentation models in this context refer to machine learning models that are specifically designed to identify and delineate regions of interest (such as the carpals or wrist bones) within medical images like hand X-rays. These models help in isolating and extracting relevant bone areas from the full hand image, which is a crucial step before applying regression models to estimate bone age.
+
+The segmentation process involves:
+
+1. **Running two specific models**:
+   - `carpals mask` model: This produces a mask highlighting the carpal bones.
+   - `radius+ulna mask` model: This generates a mask for the radius and ulna bones (wrist bones).
+
+2. **Post-processing steps** on these masks to refine and extract meaningful regions, such as:
+   - Erosion and dilation of masks to clean up the boundaries.
+   - Finding contours of the extracted regions.
+   - Determining bounding boxes around these regions.
+
+These segmentation models are essential for accurately defining the areas of interest within the hand X-ray, ensuring that subsequent regression analysis focuses precisely on the relevant bone structures.
+(base) SSL~/Shweta/Projects/Sem6_Project/gitSearch/model2>python tools_test.py
+Keywords: ['generating', ' crops', ' post-processing']
+Unique results: 8
+CONTEXT LENGTH: 8613
+CONTEXT PREVIEW:
+File: README.md | Line: 101
+
+# Getting started
+## Generating bone age
+
+   For generating bone age the python file SGP_bone_age.py requires two arguments , path to image file and gender (male/female)
+
+Post-processing steps for generating carpal crops involve several key operations as described in the project documentation and code:
+
+1. **Mask Generation and Post-Processing**: The `get_mask` function from `segment_crops.py` generates masks for identifying regions of interest (carpals and radius/ulna). These masks are then processed to filter out non-relevant areas using erosion, dilation, contour detection, and bounding box construction [README.md:43].
+
+2. **Cropping**: Using the generated carpal mask, the `crop_carpals` function is called to extract the carpal region from the padded image created in `get_segments(image_path)` [segment_crops.py:658]. This function returns a cropped BGR image along with its bounding box coordinates in the original (padded) image scale.
+
+3. **Bounding Box and Crop Extraction**: The `crop_carpals` function filters contours by area, uses mean-intensity heuristics to identify the carpal region, constructs a final bounding box, and rescales the coordinates back to the original image size [segment_crops.py:658].
+
+4. **Padding and Squaring**: Finally, the `add_border` utility function is applied to ensure that all cropped images (phalanges, carpal, wrist_ulna) are padded or squared to maintain consistent input dimensions for downstream inference processes [SGP_bone_age.py:816]. This padding involves adding black borders to make the smaller dimension equal to the larger one, ensuring square inputs.
+
+These steps collectively form part of the pipeline that prepares the necessary segmental crops from a single hand X-ray image before feeding them into the respective bone age prediction models [SGP_bone_age.py:731].
+(base) SSL~/Shweta/Projects/Sem6_Project/gitSearch/model2>python tools_test.py
+Keywords: ['short bone', ' masks', ' pre-processed', ' generate', ' segments']
+Unique results: 16
+CONTEXT LENGTH: 21084
+CONTEXT PREVIEW:
+File: README.md | Line: 31
+</h1>
+
+1.  Provides GP bone age for the full hand, as well as segmented assessments for short bones, carpals, and wrist.
+
+
+2. Introduces Segmental Greulich-Pyle bone age,
+Based on the information provided in `segment_crops.py`, the short bone masks (specifically for carpal bones and radius/ulna) are processed through a series of steps to clean up the segmentation results before deriving bounding boxes for segment crops:
+
+1. **Running Segmentation Models**:
+   - For carpals: The script expects the model `bone_segment_models/carpal_segment.pth` which generates a mask for the carpal bones.
+   - For radius and ulna: The script expects the model `bone_segment_models/radius_ulna_segment.pth` which generates a mask for these two bones.
+
+2. **Cleaning Masks**:
+   - Erosion/Dilation: After obtaining the initial masks, they are likely cleaned up using morphological operations such as erosion and dilation to remove small noise or fill in small gaps.
+
+3. **Finding Contours**:
+   - The script identifies contours in these processed masks using image processing techniques.
+
+4. **Bounding Box Construction**:
+   - From the identified contours, it selects regions of interest (ROIs) based on heuristics such as contour area and mean intensity.
+     - `crop_carpals(image_path, carpal_mask)` filters contours by area to identify the carpals region.
+     - `crop_wrist_ulna(image_path, ra_mask)` finds the largest contour in the radius/ulna mask and expands this bounding box.
+
+5. **Rescaling Coordinates**:
+   - The coordinates of these ROIs are then rescaled back to match the original image dimensions for accurate cropping.
+
+6. **Returning Cropped Images**:
+   - For `crop_carpals`, it returns a cropped image along with its position (left, top), width, and height in the original image.
+   - For `crop_wrist_ulna`, it returns a similar set of details but specifically for the wrist/ulna region.
+
+This process effectively isolates and prepares specific segments of the hand X-ray for further analysis or display.
+(base) SSL~/Shweta/Projects/Sem6_Project/gitSearch/model2>pip install time
+ERROR: Could not find a version that satisfies the requirement time (from versions: none)
+ERROR: No matching distribution found for time
+(base) SSL~/Shweta/Projects/Sem6_Project/gitSearch/model2>python
+Python 3.12.12 | packaged by Anaconda, Inc. | (main, Oct 21 2025, 20:16:04) [GCC 11.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import time
+>>> quite
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'quite' is not defined. Did you mean: 'quit'?
+>>> quit
+Use quit() or Ctrl-D (i.e. EOF) to exit
+>>>
+(base) SSL~/Shweta/Projects/Sem6_Project/gitSearch/model2>
+(base) SSL~/Shweta/Projects/Sem6_Project/gitSearch/model2>python tools_test.py
+Keywords: ['short bone', ' masks', ' pre-processed', ' generate', ' segments']
+Unique results: 36
+CONTEXT LENGTH: 39040
+CONTEXT PREVIEW:
+File: README.md | Line: 20
+The GP assessment compares the full hand X-ray of a child with reference radiographs in the GP atlas to assign a bone age. However, some radiographs may harbour substantial
+Based on the provided code and comments, here is how the short bone masks are processed to generate short-bone segments:
+
+1. Two segmentation models are run to get masks:
+   - Carpals mask → expects `bone_segment_models/carpal_segment.pth`
+   - Radius+ulna mask → expects `bone_segment_models/radius_ulna_segment.pth`
+
+2. These masks are cleaned using erosion/dilation, and contours are found.
+
+3. The `crop_carpals(image_path, carpal_mask)` function is called to derive the short bone (phalanges) crop:
+
+   ```python
+   * crop_carpals(image_path, carpal_mask)
+     - Returns: (crop_img, left, top, width, height)
+     - Logic: filters contours by area, uses mean-intensity heuristics to pick carpal region,
+              constructs final bounding box, rescales coords to original image size.
+   ```
+
+4. The `get_segments(image_path)` function internally calls `get_mask` and the two crop functions.
+
+5. To build the phalanges (shortbones) crop:
+
+   - Subtract the carpal region from the padded image
+   - Subset the numpy array till the wrist top-coordinate
+
+6. This results in three crops being returned:
+
+   ```python
+   get_segments(...) returns three padded BGR numpy images (phalanges, carpal, wrist_ulna)
+   ```
+
+7. The `add_border(img)` utility function pads the smaller image dimension so the image becomes square before returning it.
+
+8. These pre-processed and padded short-bone segments are then fed into the DenseNet transforms for further processing.
+
+In summary, the short bone masks go through contour detection, bounding box construction, heuristics to pick the correct region, padding, and then are used as input for the model predictions.
+Time taken: 10.09 mins
+(base) SSL~/Shweta/Projects/Sem6_Project/gitSearch/model2>python tools_test.py
+Keywords: ['high school student', ' segmentation models']
+Unique results: 5
+Traceback (most recent call last):
+  File "/home/shwetashankar/Shweta/Projects/Sem6_Project/gitSearch/model2/tools_test.py", line 120, in <module>
+    filtered_results = filter_results(unique_results, question)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shwetashankar/Shweta/Projects/Sem6_Project/gitSearch/model2/tools_test.py", line 66, in filter_results
+    scored.sort(reverse=True)
+TypeError: '<' not supported between instances of 'dict' and 'dict'
+(base) SSL~/Shweta/Projects/Sem6_Project/gitSearch/model2>
+(base) SSL~/Shweta/Projects/Sem6_Project/gitSearch/model2>python tools_test.py
+Keywords: ['high school student', ' segmentation models']
+Unique results: 5
+CONTEXT LENGTH: 7408
+CONTEXT PREVIEW:
+File: README.md | Line: 42
+# CNN model for Segmental Bone Age assessment
+
+## Segmentation models
+Two separate segmentation models were trained to segment the carpals and the wrist region of the X-ray
+Segmentation models are a type of machine learning model used to identify and separate different regions or objects in an image, effectively partitioning the image into distinct segments or parts.
+
+In this specific project [README.md:42], two separate segmentation models were trained to segment the carpals (bones) and the wrist region from X-ray images. These models use a backbone architecture called U-Net (found in `ori_unet_p1_bn.py`). The training was done on an open-access dataset provided by RSNA 2017, along with additional Indian-origin X-ray images [4]. After training, these models are used to generate masks for the carpal and wrist regions of Indian X-ray images. These masks help in isolating specific bone areas from full-hand images, allowing further analysis and processing.
+
+[README.md:42]
+Time taken: 3.39 mins
+(base) SSL~/Shweta/Projects/Sem6_Project/gitSearch/model2>python tools_test.py
+Keywords: ['clinician', ' segmentation', ' models']
+Unique results: 51
+CONTEXT LENGTH: 11677
+CONTEXT PREVIEW:
+File: README.md | Line: 15
+================================================
+# About Bone Age Assessment
+Bone age assessment is a standard method for monitoring a child's growth, especially in the cas
+Segmentation models in machine learning and computer vision are neural networks designed to divide an image into multiple segments or regions, each representing a different part of the input image based on its content. In this specific project, segmentation models were trained to identify and isolate distinct anatomical regions within pediatric hand X-ray images [4].
+
+In the context of bone age assessment:
+- **Carpal Segmentation Model:** This model was specifically trained to delineate carpal bones from a full-hand X-ray image. It uses U-net architecture, which is effective for segmentation tasks due to its ability to capture both contextual and detailed information.
+- **Wrist Segmentation Model (Radius + Ulna):** Another separate model was developed for the wrist region, which includes the radius and ulna bones. Like the carpal segmentation model, this uses a similar U-net architecture.
+
+These segmentation models are crucial because they allow the system to focus on specific anatomical segments of the hand X-ray image, rather than evaluating the entire image at once [README.md:42].
+
+Implementation details:
+- The segmentation process involves running these pre-trained models on input X-ray images. For each segment (carpals and wrist), a mask or binary map is generated that highlights the specific bones within those regions.
+- After obtaining these masks, the full-hand images are cropped to remove the carpal and wrist segments, leaving only the shortbones (metacarpal and phalanges) for further analysis [segment_crops.py:617].
+
+These segmentation models form a critical part of the SGP method by allowing accurate isolation of different bone regions before predicting their individual ages.
+Time taken: 7.51 mins
+(base) SSL~/Shweta/Projects/Sem6_Project/gitSearch/model2>python tools_test.py
+Keywords: ['computer vision', ' segmentation models']
+Unique results: 5
+CONTEXT LENGTH: 7408
+CONTEXT PREVIEW:
+File: README.md | Line: 42
+# CNN model for Segmental Bone Age assessment
+
+## Segmentation models
+Two separate segmentation models were trained to segment the carpals and the wrist region of the X-ray
+Segmentation models in the context of image processing and computer vision are designed to identify and delineate objects or regions of interest within an image, essentially dividing it into multiple segments corresponding to different parts or classes. In this specific project [README.md:42], two separate U-Net-based segmentation models were trained to segment the carpals (hand bones excluding wrist) and the wrist region from X-ray images.
+
+In implementation details, these segmentation models use a backbone architecture known as U-Net [ori_unet_p1_bn.py]. The U-Net model is particularly well-suited for image segmentation tasks due to its symmetric encoder-decoder structure with skip connections that allow it to capture both contextual information and detailed structures effectively. These models were first trained on the RSNA 2017 bone age assessment challenge dataset, which provides a robust initial training base.
+
+For Indian-specific X-ray images obtained from HCJMRI, Pune [README.md:43], these pre-trained U-Net models undergo further fine-tuning to adapt better to the unique characteristics of the Indian population. This fine-tuning process focuses on adjusting the last fully-connected layer specifically for improved generalization and accuracy in predicting bone age using Indian X-ray images.
+
+[README.md:42]
+Time taken: 4.26 mins
+(base) SSL~/Shweta/Projects/Sem6_Project/gitSearch/model2>
