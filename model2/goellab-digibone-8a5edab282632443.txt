@@ -1,0 +1,988 @@
+Directory structure:
+└── goellab-digibone/
+    ├── README.md
+    ├── download_models1.py
+    ├── LICENSE
+    ├── ori_unet_p1_bn.py
+    ├── requirements.txt
+    ├── segment_crops.py
+    └── SGP_bone_age.py
+
+================================================
+FILE: README.md
+================================================
+# About Bone Age Assessment
+Bone age assessment is a standard method for monitoring a child's growth, especially in the case of endocrinologicals abnormalities. One of the widely used technique is the Greulich and Pyle (GP) method of bone age assessment[1]. The GP assessment requires expert clinicians to compare a child’s full-hand X-ray with reference radiographs to determine bone age. This manual process is time consuming and introduces inter- and intra-observer variability to the assessment. 
+
+# The Segmental Greulich Pyle Method 
+The GP assessment compares the full hand X-ray of a child with reference radiographs in the GP atlas to assign a bone age. However, some radiographs may harbour substantial difference in the bone-age of various bones of the hand. This is rooted in the fact that different groups of bones in the hand matures at different rates due to different hormonal influences. For instance, sex hormones govern the maturation of tubular bones (metacarpal, phalanges, radius, ulna) but the carpal maturation follows a different pattern[2]. This explains the source of the high inter-rater variabilitites in BAA.<br>
+<br>
+Our novel method - **Segmental Greulich-Pyle (SGP)** - divides the full hand into three meaningful anatomical segments based on their maturational variation, namely, Shortbones (Metacarpal and Phalanges), Carpals and Wrist (Radius and Ulna) and determines their segmental bone ages. The SGP bone age , unlike the Full-hand GP bone age, take the maturation variation of the segments into account to report a more appropriate bone age of the child. This model has been appropriated for the Indian population.
+
+<p align="center">
+  <img src=assets/logo_new_REM.png alt="digiBONE" width="700">
+</p>
+
+
+<h1>
+  <span style="color:blue;">digi</span><span style="color:#FF0001;">BONE</span> - An AI application that automates SGP bone age assessment of a child
+</h1>
+  
+1.  Provides GP bone age for the full hand, as well as segmented assessments for short bones, carpals, and wrist.
+
+
+2. Introduces Segmental Greulich-Pyle bone age, accounting for variations in bone maturity across different hand regions.
+
+
+3. Enhances diagnostic accuracy with automated, consistent and rapid assessment of bone age catering to the Indian population.
+
+
+# CNN model for Segmental Bone Age assessment
+
+## Segmentation models
+Two separate segmentation models were trained to segment the carpals and the wrist region of the X-ray images[4]. The segmentation models has a [Unet](ori_unet_p1_bn.py) backbone. The models were trained on an open-access dataset from the RSNA (Radiological Society of North America) 2017 bone age assessment challenge. A separate set of 2827 X-ray images of Indian origin were obtained from our collaborators from HCJMRI, Pune. The segmentation models were used to generate the carpal and wrist crops of Indian X-ray images after appropriate [mask post-processing](segment_crops.py). Carpal and wrist crops were subtracted from the full-hand image to obtain the shortbones crop of the image.
+
+## Bone age prediction models
+
+The boneage prediction models have a densenet161 backbone. 4 baseline boneage prediction models (full-hand and 3 segments) were trained on the RSNA dataset each for male and female[4]. These models were fine-tuned by training the last fully-connected layer on Indian dataset for better generalization. 
+
+The boneage prediction models for full-hand and their corresponding segments were trained independently i.e., no model had access to information from its segmental counterparts during training. Hence for combining the influence of the segmental differences of the bone age , the segmental predictions were equally weighted and rounded off to their nearest GP class. This is our SGP model. The interpretation would be that given the segmental differences of the bones, which is the most appropriate GP bone age class the full-hand X-ray belongs to. 
+
+All bone age segmentation and prediction model weights (both baseline and fine-tuned) can be downloaded by running `download_models1.py`, or manually from the GitHub Releases page.
+
+## Model Evaluation
+
+Mean Absolute Deviation (MAD) value , correlation and bland-altman plots were used to asses the generalizability of the models. Bland-Altman analysis shows the level of agreement between two methods.
+
+### *Table 1 : The MAD values of the models*
+
+| Model | Gender | MAD in months |
+|:-------:|:--------:|:---------------:|
+| Full-Hand | Male | 5.7 |
+| Full-Hand | Female | 5.9 |
+| SGP | Male | 4.7 |
+| SGP | Female | 4.9 |
+
+### Correlation and Bland-Altman plot for Full-Hand model 
+<p align="center">
+  <img src=assets/digiBONE_fh_corr.png alt="fh_corr">
+  <br>
+  <img src=assets/digiBONE_fh_ba.png alt="fh_ba">
+</p>
+
+### Correlation and Bland-Altman plot for SGP model 
+<p align="center">
+  <img src=assets/digiBONE_seg_class_corr1.png alt="sgp_corr">
+  <br>
+  <img src=assets/digiBONE_seg_class_ba1.png alt="sgp_ba">
+</p>
+
+# Installation
+
+1. Clone the repository to your local machine
+   ```shell
+    git clone https://github.com/goellab/digiBONE.git
+   ```
+2. Change the current directory to the local repository
+   ```shell
+   cd path/digiBONE
+   ```
+3. Install the required python packages from requirements.txt file
+   ```shell
+   pip install --no-cache-dir -r requirements.txt
+   ```
+
+3. Download the model weights
+   ```shell
+   python3 download_models1.py
+   ```
+
+# Getting started
+## Generating bone age
+
+   For generating bone age the python file SGP_bone_age.py requires two arguments , path to image file and gender (male/female)
+   ```shell
+   python3 SGP_bone_age.py /path/to/image/file male
+   ```
+<p align="center">
+  <img src=assets/SGP_1640.jpg alt="code image">
+  <br>
+  <em>Figure 1: The output displays images of the full-hand along with its 3 segments. The full-hand and segmental ages along with SGP bone age is displayed in the image </em>
+</p>
+
+<!-- 
+# Contributors
+Our bone age project was made possible by the following contributors:
+<p align="center">
+  <img src=assets/contributors_003.jpg alt="contributor image">
+</p>
+-->
+# Acknowledgement
+<p align="center">
+  <img src=assets/iiser1.png alt="iiser_logo" width="100">&nbsp&nbsp&nbsp&nbsp&nbsp
+  <img src=assets/logo200.png alt="hcjmri_logo "width="100">&nbsp&nbsp&nbsp&nbsp&nbsp
+  <img src=assets/Karolinska_Institutet_seal.svg alt="ki_logo" width="100">
+</p>
+
+# References
+
+[1] William Walter Greulich and Sarah Idell Pyle, editors. Radiographic atlas of skeletal development of the hand and wrist. Stanford Univ. Press [u.a.], Stanford, Calif, 2. ed., repr edition, 2011.
+
+[2] Chirantap Oza, Anuradha V. Khadilkar, Pranay Goel, Tim Aeppli, Shruti Mondkar, Nikhil Shah, Nikhil Lohiya, Hemchand Krishna Prasad, Prashant Patil, Chidvilas More, Neha Kajale, Vaman Khadilkar, and Lars S¨avendahl. Standardization of Weightage Assigned to Different Segments of the Hand X-ray for Assessment of Bone Age by the Greulich–Pyle Method. Indian Journal of Endocrinology and Metabolism, 28(2):160–166, March 2024. https://journals.lww.com/10.4103/ijem.ijem_237_23
+
+[3] Rashmi Chapke, Shruti Mondkar, Chirantap Oza, Vaman Khadilkar, Tim R. J. Aeppli, Lars S¨avendahl, Neha Kajale, Dipali Ladkat, Anuradha Khadilkar, and Pranay Goel. The automated Greulich and Pyle: a coming-of-age for segmental methods? Frontiers in Artificial Intelligence, 7, 2024. https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2024.1326488
+
+[4] Rashmi Chapke. Segmentation of Pediatric Hand Radiograph Using UNet for Bone Aging. Master’s thesis, Indian Institute of Science Education and Research, May 2023. http://dr.iiserpune.ac.in:8080/xmlui/handle/123456789/7873
+   
+
+
+
+================================================
+FILE: download_models1.py
+================================================
+"""
+Downloads all required model weights from GitHub Releases.
+Supports private repositories via GitHub API authentication.
+
+Usage:
+    export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxx   # required only if repo is private
+    python3 download_models.py
+"""
+
+import os
+import requests
+from typing import Dict, List
+
+# ==============================
+# USER CONFIGURATION
+# ==============================
+
+GITHUB_USER = "goellab"
+REPO_NAME = "digiBONE"
+
+# One version per model family
+VERSIONS: Dict[str, str] = {
+    "boneage_prediction_models": "v1.0",
+    "bone_segment_models": "v1.0",
+    "rsna_boneage_prediction_models": "v1.0",
+}
+
+# Model files per family (filenames are stable)
+RELEASES: Dict[str, List[str]] = {
+    "boneage_prediction_models": [
+        "carpal_age_f1.pth",
+        "carpal_age_m1.pth",
+        "full_hand_age_f.pth",
+        "full_hand_age_m.pth",
+        "shortbone_age_f1.pth",
+        "shortbone_age_m.pth",
+        "wrist_age_f1.pth",
+        "wrist_age_m1.pth",
+    ],
+    "bone_segment_models": [
+        "carpal_segment.pth",
+        "radius_ulna_segment.pth",
+        "shortbone_segment.pth",
+    ],
+    "rsna_boneage_prediction_models": [
+        "carpal_boneage_girl.pth",
+        "carpal_boneage.pth",
+        "full_hand_boneage_girl.pth",
+        "full_hand_boneage.pth",
+        "short_bone_boneage_girl.pth",
+        "short_bone_boneage.pth",
+        "wrist_boneage_girl.pth",
+        "wrist_boneage.pth",
+    ],
+}
+
+# ==============================
+# AUTHENTICATION
+# ==============================
+
+TOKEN = os.getenv("GITHUB_TOKEN")
+
+API_HEADERS = {
+    "Accept": "application/vnd.github+json",
+}
+DOWNLOAD_HEADERS = {
+    "Accept": "application/octet-stream",
+}
+
+if TOKEN:
+    API_HEADERS["Authorization"] = f"Bearer {TOKEN}"
+    DOWNLOAD_HEADERS["Authorization"] = f"Bearer {TOKEN}"
+
+
+# ==============================
+# CORE FUNCTIONS
+# ==============================
+
+def get_release_assets(tag: str):
+    """
+    Fetch release metadata and assets using GitHub API.
+    """
+    url = f"https://api.github.com/repos/{GITHUB_USER}/{REPO_NAME}/releases/tags/{tag}"
+    r = requests.get(url, headers=API_HEADERS)
+
+    if r.status_code == 404:
+        raise RuntimeError(
+            f"Release tag '{tag}' not found or access denied.\n"
+            "If the repository is private, ensure GITHUB_TOKEN is set "
+            "and has 'Releases: Read' permission."
+        )
+
+    r.raise_for_status()
+    return r.json()["assets"]
+
+
+def download_asset(asset_id: int, destination: str):
+    """
+    Download a release asset by asset ID.
+    """
+    url = f"https://api.github.com/repos/{GITHUB_USER}/{REPO_NAME}/releases/assets/{asset_id}"
+    r = requests.get(url, headers=DOWNLOAD_HEADERS, stream=True)
+    r.raise_for_status()
+
+    os.makedirs(os.path.dirname(destination), exist_ok=True)
+
+    with open(destination, "wb") as f:
+        for chunk in r.iter_content(chunk_size=8192):
+            if chunk:
+                f.write(chunk)
+
+
+def download_release(family: str, version: str, files: List[str]):
+    """
+    Download all files for a given model family and version.
+    """
+    tag = f"{family}-{version}"
+    print(f"\n=== Processing release: {tag} ===")
+
+    assets = get_release_assets(tag)
+    asset_map = {a["name"]: a["id"] for a in assets}
+
+    for filename in files:
+        local_path = os.path.join(family, filename)
+
+        if os.path.exists(local_path):
+            print(f"✔ Exists: {local_path}")
+            continue
+
+        if filename not in asset_map:
+            raise RuntimeError(
+                f"File '{filename}' not found in release '{tag}'."
+            )
+
+        print(f"⬇ Downloading {filename}")
+        download_asset(asset_map[filename], local_path)
+
+
+# ==============================
+# MAIN ENTRY POINT
+# ==============================
+
+def main():
+    print("Starting model download...")
+    print("Authenticated:", bool(TOKEN))
+
+    for family, files in RELEASES.items():
+        version = VERSIONS[family]
+        download_release(family, version, files)
+
+    print("\nAll models downloaded successfully.")
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+================================================
+FILE: LICENSE
+================================================
+MIT License
+
+Copyright (c) 2025 pending (Laboratory of Mathematical Medicine et al.)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+
+================================================
+FILE: ori_unet_p1_bn.py
+================================================
+import torch.nn as nn
+import torch
+import torchvision.transforms.functional as TF
+class DoubleConv(nn.Module):
+  def __init__(self, in_ch, out_ch):
+    super(DoubleConv,self).__init__()
+    
+    self.conv=nn.Sequential(
+        nn.Conv2d(in_ch, out_ch, kernel_size=3, stride=1, padding=1, bias=False),
+        nn.BatchNorm2d(out_ch),
+        nn.ReLU(inplace=True),
+        nn.Conv2d(out_ch, out_ch, kernel_size=3, stride=1, padding=1, bias=False),
+        nn.BatchNorm2d(out_ch),
+        nn.ReLU(inplace=True)
+    )
+
+  def forward(self,x):
+  
+    return self.conv(x)
+
+class UNET(nn.Module):
+  def __init__(self, in_ch, out_ch):
+    super(UNET, self).__init__()
+
+    #Downsample
+    self.conv1 = DoubleConv(in_ch=3, out_ch=64) 
+    self.conv2 = DoubleConv(in_ch=64, out_ch=128) 
+    self.conv3 = DoubleConv(in_ch=128, out_ch=256)
+    self.conv4 = DoubleConv(in_ch=256, out_ch=512)
+    self.maxPool = nn.MaxPool2d(kernel_size=2, stride=2)
+    #bottleneck
+    self.bottleneck = DoubleConv(in_ch=512, out_ch=1024)
+    #Upsample
+    self.up1 = nn.ConvTranspose2d(1024,512 , kernel_size=2, stride=2)
+    self.up_conv1 = DoubleConv(in_ch=1024, out_ch=512)
+    self.up2 = nn.ConvTranspose2d(512,256 , kernel_size=2, stride=2)
+    self.up_conv2 = DoubleConv(in_ch=512, out_ch=256)
+    self.up3 = nn.ConvTranspose2d(256,128 , kernel_size=2, stride=2)
+    self.up_conv3 = DoubleConv(in_ch=256, out_ch=128)
+    self.up4 = nn.ConvTranspose2d(128,64 , kernel_size=2, stride=2)
+    self.up_conv4 = DoubleConv(in_ch=128, out_ch=64)
+
+    self.final_conv = nn.Conv2d(64, 1, kernel_size=1)
+
+  def forward(self,x):
+    skip_connections=[]
+    #Encoder
+    x=self.conv1(x)
+   
+    skip_connections.append(x)
+    x=self.maxPool(x)
+    x=self.conv2(x)
+    skip_connections.append(x)
+    x=self.maxPool(x)
+    x=self.conv3(x)
+    skip_connections.append(x)
+    x=self.maxPool(x)
+    x=self.conv4(x)
+    skip_connections.append(x)
+    x=self.maxPool(x)
+
+    #bottleneck
+    x=self.bottleneck(x)
+
+    #Decoder
+    skip_connections=skip_connections[::-1]
+
+    x=self.up1(x)
+    
+    skip_connections[0] = TF.resize(skip_connections[0], size=(x.shape)[2:])
+    #x = TF.resize(x, size=skip_connections[0].shape[2:])
+    concat_skip = torch.cat((skip_connections[0], x), dim=1)
+
+    x=self.up_conv1(concat_skip)
+    x=self.up2(x)
+  
+    skip_connections[1] = TF.resize(skip_connections[1], size=(x.shape)[2:])
+    #x = TF.resize(x, size=skip_connections[1].shape[2:])
+    concat_skip = torch.cat((skip_connections[1], x), dim=1)
+
+    x=self.up_conv2(concat_skip)
+    x=self.up3(x)
+
+    skip_connections[2] = TF.resize(skip_connections[2], size=(x.shape)[2:])
+    #x = TF.resize(x, size=skip_connections[2].shape[2:])
+    concat_skip = torch.cat((skip_connections[2], x), dim=1)
+
+    x=self.up_conv3(concat_skip)
+    x=self.up4(x)
+
+    skip_connections[3] = TF.resize(skip_connections[3], size=(x.shape)[2:])
+    #x = TF.resize(x, size=skip_connections[3].shape[2:])
+    concat_skip = torch.cat((skip_connections[3], x), dim=1)
+
+    x=self.up_conv4(concat_skip)
+
+
+    return self.final_conv(x)
+
+
+
+================================================
+FILE: requirements.txt
+================================================
+matplotlib==3.7.1
+numpy==1.26.4
+opencv_python==4.10.0
+opencv_python_headless==4.10.0
+Pillow==9.5.0
+torch==2.5.1
+torchvision==0.20.1
+
+
+
+================================================
+FILE: segment_crops.py
+================================================
+# This script forms part of the digiBONE repository available at https://github.com/goellab/digiBONE (updated 12-Dec-2025)
+# This script is called at SGP_bone_age.py to generate shortbones, carpals and wrist segments from the original image
+
+import cv2
+import numpy as np
+import torch
+import torch.nn as nn
+from torchvision.transforms import transforms as T
+from PIL import Image, ImageOps
+import matplotlib.pyplot as plt
+
+def crop_carpals(image_path,mask):
+    """
+    generates carpal crop from carpal mask
+    """
+    ori_image1 = cv2.imread(image_path,cv2.IMREAD_GRAYSCALE)
+    ori_image2 = add_border(ori_image1)
+    ori_image = cv2.resize(ori_image2,(512,512))
+    
+    #scaling_factor calculation
+    sf = ori_image2.shape[0]/512
+    
+    #morphological operation
+    img = mask
+    kernel = np.ones((3, 3), np.uint8)
+    erosion0 = cv2.erode(img, kernel, iterations=1)
+    dilation = cv2.dilate(erosion0, kernel, iterations=3)
+            
+    #contour detection
+    contours, hierarchy = cv2.findContours(dilation, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    #arranging the contours in descending order based on area
+    contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
+
+    largest_contour = contours[0]
+    filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) >= cv2.contourArea(largest_contour)*0.25]
+    contour_len = len(filtered_contours)
+    crop_img_mean=63.75
+    
+    #corrects crop detection based on higher intensity
+    for i in range(0,len(filtered_contours)):
+        
+        (x,y,w,h) = cv2.boundingRect(filtered_contours[i])
+
+        crop_img = cv2.cvtColor(ori_image[y:y+h, x:x+w], cv2.COLOR_GRAY2BGR)
+        
+        if np.mean(crop_img)>crop_img_mean:
+            crop_img_mean=np.mean(crop_img)
+            x_ = int(x*0.1)
+            
+            y_ = int(y*0.1)
+            
+            b_ = int((x+w)*0.1)
+            
+            r_ = int((y+h)*0.05)
+            
+            
+            
+            mask_c = np.zeros_like(mask)
+            
+            
+            mask_c[y:y+h+r_, x-x_:x+w+b_] = 255
+            
+            mask_new = cv2.subtract(img, mask_c)
+            mask_new1 = cv2.subtract(img,mask_new)
+
+            
+            
+    contours1, hierarchy1 = cv2.findContours(mask_new1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    filtered_contours1 = [cnt for cnt in contours1 if cv2.contourArea(cnt) > 10]
+    boxes=[]
+    for i in range(0,len(filtered_contours1)):
+        (x,y,w,h) = cv2.boundingRect(filtered_contours1[i])
+        boxes.append([x, y, x+w, y+h])
+    if len(boxes) == 0:
+        pass
+    elif len(boxes) != 0:
+        boxes = np.array(boxes)    
+        left, top = np.min(boxes, axis=0)[:2]
+        right, bottom = np.max(boxes, axis=0)[2:]
+        wc = right-left
+        hc = bottom-top
+        
+        #scaling the coordinates for original size image
+        top1 = int(top*sf)
+        bottom1 = int(bottom*sf)
+        left1 = int(left*sf)
+        right1 = int(right*sf)
+        crop_img = ori_image2[top1:bottom1, left1:right1]
+        
+        if wc*hc < 2200:
+            
+            crop_img = ori_image2[top1:bottom1+int(5*sf), left1-int(40*sf):right1+int(40*sf)]
+
+        crop_img = cv2.cvtColor(crop_img, cv2.COLOR_GRAY2BGR)
+      
+    return crop_img ,left1,top1,(right1-left1),(bottom1-top1)
+
+
+def crop_wrist_ulna(image_path,mask):
+    """
+    generate wrist crop from wrist mask
+    """
+    ori_image1 = cv2.imread(image_path,cv2.IMREAD_GRAYSCALE)
+    ori_image2 = add_border(ori_image1)
+    ori_image = cv2.resize(ori_image2,(512,512))
+    img = mask
+    
+    #scaling_factor calculation
+    sf = ori_image2.shape[0]/512
+    
+    kernel = np.ones((3, 3), np.uint8)
+    erosion = cv2.erode(img, kernel, iterations=1)
+    
+    filtered_image = cv2.dilate(erosion, kernel, iterations=3)
+
+           
+    contours, hierarchy = cv2.findContours(filtered_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    largest_contour = max(contours, key=cv2.contourArea)
+    
+    (x,y,w,h) = cv2.boundingRect(largest_contour)
+    
+    x1 = int(x*sf)
+    y1 = int(y*sf)
+    w1 = int(w*sf)
+    h1 = int(h*sf)
+    crop_img = cv2.cvtColor(ori_image2[y1:y1+h1, x1-int(50*sf):x1+w1+int(50*sf)], cv2.COLOR_GRAY2BGR)
+    
+    return crop_img ,x1,y1,w1,h1
+
+
+def add_border(img):
+    """
+    pad smaller dimension (height or width) of input image to make it equal to higher dimension and resize to 2000 X 2000
+    """
+    b_left= 0
+    b_right= 0
+    b_top = 0
+    b_bot= 0
+ 
+    h = img.shape[0]
+    w = img.shape[1]
+
+    if h>w:
+        diff = h-w
+        if diff%2 == 0:
+            b_left = diff/2
+            b_right = diff/2
+        elif diff%2 != 0:
+            b_left = (diff+1)/2
+            b_right = (diff+1)/2
+    elif w>h:
+        diff = w-h
+        if diff%2 == 0:
+            b_top = diff/2
+            b_bot = diff/2
+        elif diff%2 != 0:
+            b_top = (diff+1)/2
+            b_bot = (diff+1)/2       
+    img = cv2.copyMakeBorder(img, int(b_top), int(b_bot), int(b_left), int(b_right), cv2.BORDER_CONSTANT, value=(0, 0, 0))
+    return img
+
+carpal_path = "bone_segment_models/carpal_segment.pth"
+ra_path = "bone_segment_models/radius_ulna_segment.pth"
+            
+            
+def get_mask(image_path):
+    """
+    Runs two segmentation models to get carpal and wrist (radius + ulna) masks
+    """
+    to_tensor = T.Compose([T.ToTensor()])
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    #Load the checkpoint
+    c= torch.load(carpal_path, map_location=device, weights_only=False)
+    ra = torch.load(ra_path, map_location = device,weights_only=False)
+    
+    c.eval()
+    ra.eval()
+    
+    #Reading image
+    image_path = image_path
+    img = Image.open(image_path).convert("RGB")
+    img_c =ImageOps.equalize(img)
+    
+    #Processing image
+    
+    img_c = np.array(img_c)
+    img_c = add_border(img_c)
+    img_c = cv2.resize(img_c, (512,512))
+    img_c = to_tensor(img_c).to(device)
+    
+    with torch.no_grad():
+        #Prediction
+        c_pred = torch.sigmoid(c(img_c.unsqueeze(0)))
+        c_pred = c_pred.cpu().numpy()
+
+        ra_pred = torch.sigmoid(ra(img.unsqueeze(0)))
+        ra_pred = ra_pred.cpu().numpy()
+
+    c_pred = np.squeeze(c_pred, axis = (0,1))
+    ra_pred = np.squeeze(ra_pred, axis=(0,1))
+    
+    return (c_pred*255).astype('uint8'), (ra_pred*255).astype('uint8')
+
+
+def get_segments(image_path):
+    """
+    generating segmental crops
+    """
+    
+    c,ra = get_mask(image_path)
+    
+    # left top width height
+    carpal,xc,yc,wc,hc = crop_carpals(image_path,c)
+    
+    # left top width height
+    wrist_ulna, xu,yu,wu,hu = crop_wrist_ulna(image_path,ra)
+        
+    image1 = cv2.imread(image_path,cv2.IMREAD_GRAYSCALE)
+    image2 = add_border(image1)
+    image = cv2.resize(image2,(512,512))
+    
+    sf = image2.shape[0]/512
+    
+    
+    mask_c = np.zeros_like(image2)
+    
+    
+    #adjusting boundaries based on segment size
+    carpal_area = (wc)*(hc)
+    if carpal_area>int(4000*sf*sf):
+
+        mask_c[yc+int(10*sf):, xc:xc+wc] = 255
+    elif carpal_area>int(2200*sf*sf):
+        mask_c[yc+int(5*sf):, xc:xc+wc] = 255
+    else:
+        mask_c[yc:, xc:xc+wc] = 255
+    
+    #subtracts carpal region from the original image using the mask
+    result_image = cv2.subtract(image2, mask_c)
+    
+    #subsetting the numpy array till the wrist top-coordinate
+    phalanges = result_image[:yu,:]
+        
+    phalanges = cv2.cvtColor(phalanges, cv2.COLOR_GRAY2BGR)
+    
+    
+    wrist_top = yu
+    carpal_bottom = yc+hc 
+    #removing carpal region from wrist crops
+    if wrist_top > carpal_bottom :
+        
+        result_wrist = image2[carpal_bottom:,xu-int(50*sf):xu+wu+int(50*sf)]
+        wrist_ulna = cv2.cvtColor(result_wrist, cv2.COLOR_GRAY2BGR)
+    
+    return add_border(phalanges), add_border(carpal), add_border(wrist_ulna)
+
+
+
+================================================
+FILE: SGP_bone_age.py
+================================================
+# This script forms part of the digiBONE repository available at https://github.com/goellab/digiBONE (updated 12-Dec-2025)
+
+import sys
+import cv2
+import torch
+from torchvision.transforms import transforms
+import torchvision.transforms.functional as TF
+from torchvision.models import densenet161
+from PIL import Image
+import matplotlib.pyplot as plt
+from segment_crops import get_segments,add_border
+
+"""
+Purpose
+--------------------
+Script to produce a Segmental Greulich–Pyle (SGP) bone-age estimate from a
+single hand X-ray. The pipeline:
+  1. Load input X-ray.
+  2. Use segmentation utilities (segment_crops.py) to produce three region crops:
+       - Short‑bones (phalanges)
+       - Carpals
+       - Wrist (radius + ulna)
+  3. Run four regression models (DenseNet161 → single-output linear head):
+       - Full-hand model
+       - Short-bones model
+       - Carpal model
+       - Wrist model
+  4. Average the three segment predictions and fuse with the full‑hand prediction
+     using gender-specific weights to compute the final SGP age.
+  5. Map the continuous prediction to the nearest Greulich–Pyle class (months),
+     convert to years, and save a 2×2 figure with annotated ages.
+
+Files / model checkpoints used (exact filenames referenced in code)
+-------------------------------------------------------------------
+Regression (bone-age) models:
+  - boneage_prediction_models/full_hand_age_f.pth   (female full-hand)
+  - boneage_prediction_models/full_hand_age_m.pth   (male full-hand)
+
+  - boneage_prediction_models/carpal_age_f1.pth     (female carpal)
+  - boneage_prediction_models/carpal_age_m1.pth     (male carpal)
+
+  - boneage_prediction_models/shortbone_age_f1.pth  (female shortbones)
+  - boneage_prediction_models/shortbone_age_m.pth   (male shortbones)
+
+  - boneage_prediction_models/wrist_age_f1.pth      (female wrist)
+  - boneage_prediction_models/wrist_age_m1.pth      (male wrist)
+
+Segmentation models (used by segment_crops.py):
+  - bone_segment_models/carpal_segment.pth
+  - bone_segment_models/radius_ulna_segment.pth
+
+Command-line usage
+------------------
+  python SGP_bone_age.py /path/to/hand_xray.jpg m
+  python SGP_bone_age.py /path/to/hand_xray.jpg f
+
+  The second argument selects gender branch:
+    - 'm', 'M', 'Male' → male branch (uses male-model .pth files)
+    - any other value → female branch (uses female-model .pth files)
+
+What the script outputs
+-----------------------
+  - File: SGP_<original_filename>  (PNG) — 2×2 figure showing:
+      Full-Hand | Shortbones
+      Carpal    | Wrist
+    Each panel annotated with the model age (years). The SGP age (years) is shown as
+    a caption in the saved figure.
+
+Important internal details & assumptions
+---------------------------------------
+  - Regression backbone: DenseNet161 with final classifier replaced by torch.nn.Linear(..., 1).
+  - The script constructs model architecture and then loads checkpoint weights from the .pth files.
+  - Preprocessing:
+      * Full-hand models use a different normalization (flag `fhm=True` in the code).
+      * Short-bones model uses a center crop (flag `sbm=True`).
+  - Units: model outputs are interpreted as **months**. The script maps to the nearest GP class
+    (also in months) and divides by 12 to display **years**.
+  - Combination weights:
+      * Male:    SGP = close_class(0.24 * segments_mean + 0.76 * full_hand)
+      * Female:  SGP = close_class(0.49 * segments_mean + 0.51 * full_hand)
+
+Summary of segment_crops.py (what it does & how it connects)
+-----------------------------------------------------------
+The main script calls `get_segments(image_path)` in `segment_crops.py`. That module:
+  - Runs two segmentation models to get masks:
+      * carpals mask → expects bone_segment_models/carpal_segment.pth
+      * radius+ulna mask → expects bone_segment_models/radius_ulna_segment.pth
+    (Function: get_mask)
+
+  - Cleans masks (erosion/dilation), finds contours and bounding boxes, and derives crops:
+      * crop_carpals(image_path, carpal_mask)
+        - Returns: (crop_img, left, top, width, height)
+        - Logic: filters contours by area, uses mean-intensity heuristics to pick carpal region,
+                 constructs final bounding box, rescales coords to original image size.
+      * crop_wrist_ulna(image_path, ra_mask)
+        - Returns: (crop_img, x1, y1, w1, h1)
+        - Logic: finds largest contour in radius/ulna mask, builds an expanded bounding box,
+                 rescales to original size.
+      * get_segments(image_path)
+        - Internally calls get_mask and the two crop_... functions.
+        - Builds the phalanges (shortbones) crop by subtracting the carpal region from the
+          padded image and subsetting the numpy array till the wrist top-coordinate.
+        - Returns three images: (phalanges_crop, carpal_crop, wrist_ulna_crop).
+        - The returned crops are padded/squared (via add_border) so downstream inference gets
+          consistent square inputs.
+  - Utility function add_border(img)
+    - Pads the smaller image dimension so the image becomes square (black padding),
+      returning the padded image at original resolution.
+
+Return types and conventions
+----------------------------
+  - get_mask(...) returns two numpy arrays (512×512) of dtype uint8 scaled 0..255: (carpal_mask, ra_mask).
+  - crop_* functions return BGR images as numpy arrays (OpenCV-style) and bounding box coordinates in
+    the original (padded) image scale.
+  - get_segments(...) returns three padded BGR numpy images (phalanges, carpal, wrist_ulna) suitable
+    for conversion with and feeds into the DenseNet transforms used downstream.
+
+"""
+#full-hand
+fh_f_model = "boneage_prediction_models/full_hand_age_f.pth"
+fh_m_model = "boneage_prediction_models/full_hand_age_m.pth"
+
+#carpal
+c_f_model = "boneage_prediction_models/carpal_age_f1.pth"
+c_m_model = "boneage_prediction_models/carpal_age_m1.pth"
+
+#shortbones
+s_f_model = "boneage_prediction_models/shortbone_age_f1.pth"
+s_m_model = "boneage_prediction_models/shortbone_age_m.pth"
+
+#wrist
+w_f_model = "boneage_prediction_models/wrist_age_f1.pth"
+w_m_model = "boneage_prediction_models/wrist_age_m1.pth"
+
+
+#GP classes
+m_classes = [24, 32, 36, 42, 48, 54, 60, 72, 84, 96, 108, 120, 132, 138, 150, 156, 162, 168, 180, 186, 192, 204, 216]
+f_classes = [24, 30, 36, 42, 50, 60, 69, 82, 94, 106, 120, 132, 144, 156, 162, 168, 180, 192, 204, 216]
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+def pad_image(img):
+    """
+    pads smaller dimension (height or width) of input image to make it equal to higher dimension and resize to 2000 X 2000
+    """
+    width, height = img.size
+    aspect_ratio = width / height
+    padding_value=0
+    if aspect_ratio > 1:
+        gap = width-height
+        if gap%2==0:
+             pad_height = gap//2
+        else:
+             pad_height = (gap+1)//2
+        padding = (0, pad_height, 0, pad_height)
+        
+    else:
+        gap = height-width
+        if gap%2==0:
+             pad_width = gap//2
+        else:
+             pad_width = (gap+1)//2
+        padding = (pad_width, 0, pad_width, 0)
+        
+
+    return TF.pad(img, padding, fill=padding_value)
+    
+def ba_prediction(image,model_path,fhm=False, sbm=False):
+    """
+    generates bone age predictions
+    """
+    validation_transform = transforms.Compose([
+    transforms.Resize((256, 256)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.1925, 0.1925, 0.1925], std=[0.1435, 0.1435, 0.1435]),
+    
+    ])
+    
+    if fhm:
+    
+        validation_transform = transforms.Compose([
+        transforms.Resize((256, 256)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0,0,0], std=[1,1,1])
+        ])
+    if sbm:
+    
+        validation_transform = transforms.Compose([
+        transforms.Resize((256, 256)),
+        transforms.CenterCrop((224,224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0,0,0], std=[1,1,1])
+        ])
+
+    checkpoint = densenet161(weights=None)
+    num_ftrs = checkpoint.classifier.in_features
+    checkpoint.classifier = torch.nn.Linear(num_ftrs, 1)
+    checkpoint.load_state_dict(torch.load(model_path, map_location=torch.device(device), weights_only=True))
+        
+    checkpoint.to(device)
+    checkpoint.eval()
+    
+    image = image.convert("RGB")
+    image = pad_image(image)
+    input_tensor = validation_transform(image).unsqueeze(0).to(device)
+
+    with torch.no_grad():
+        output = checkpoint(input_tensor)
+        predicted_value = output.item()
+        
+    return predicted_value
+    
+
+def close_class(num,gen):
+    """
+    converts average segmental bone age to closest GP class
+    """
+    lst = m_classes if gen=='m' else f_classes
+    diff = [abs(each-num) for each in lst]
+    min_idx = diff.index(min(diff))
+    
+    return lst[min_idx]
+
+
+arguments = sys.argv
+img_path = arguments[1]
+gender = arguments[2]
+
+uploaded_image = Image.open(img_path).convert("RGB")
+ph,c,ra = get_segments(img_path)
+ph = Image.fromarray(ph)
+c = Image.fromarray(c)
+ra = Image.fromarray(ra)
+
+if gender == 'm' or gender == 'M' or gender == 'Male' or gender == 'male' or gender == 'MALE':
+
+    fh_age = ba_prediction(uploaded_image,fh_m_model,fhm=True)
+    ph_age = ba_prediction(ph,s_m_model,sbm=True)
+    c_age = ba_prediction(c,c_m_model)
+    w_age = ba_prediction(ra,w_m_model)
+    combined_age = (ph_age + c_age + w_age)/3
+    
+    SGP_age = close_class((0.24*combined_age + 0.76*fh_age) , 'm')/12
+
+else:
+
+    fh_age = ba_prediction(uploaded_image,fh_f_model)
+    ph_age = ba_prediction(ph,s_f_model)
+    c_age = ba_prediction(c,c_f_model)
+    w_age = ba_prediction(ra,w_f_model)
+    combined_age = (ph_age + c_age + w_age)/3
+    
+    SGP_age = close_class((0.49*combined_age + 0.51*fh_age) , 'f')/12
+        
+
+def display_result(img, age, title, ax=None):
+    """
+    saves a 2×2 figure with annotated ages
+    """
+    ax.imshow(img)
+    ax.set_title(f"{title} age - {round((age/12),1)} years")
+    ax.axis("off")
+
+
+fig , ((ax0,ax1),(ax2,ax3)) = plt.subplots(2,2)
+
+for i,j,k,l in zip([ax0,ax1,ax2,ax3],[uploaded_image, ph, c, ra],[fh_age, ph_age, c_age, w_age],['Full-Hand', 'Shortbones', 'Carpal', 'Wrist']):
+    
+    display_result(j,k,l,i)
+
+plt.figtext(0.5, 0, f"Segmental Greulich Pyle Age - {SGP_age} years", wrap=True, ha='center', fontsize=16)
+plt.suptitle("Bone age for Image - "+str(img_path.split("/")[-1]))
+
+plt.savefig(f"SGP_{img_path.split('/')[-1]}",bbox_inches='tight')
+
+
