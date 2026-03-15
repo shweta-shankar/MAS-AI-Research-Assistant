@@ -1,0 +1,62 @@
+RESULTS FROM gitSearch.ipynb
+
+Q1. How are short bone masks preprocessed to generate short-bone segments?
+Ans: Keywords: ['bone', ' masks', ' short', ' preprocess', ' segments']
+Unique results: 271
+
+Answer:
+In the context of bone age assessment, short bone masks refer to the process of isolating the short bones (metacarpal and phalanges) from the rest of the hand X-ray image. To generate short-bone segments, the short bone masks need to be preprocessed. 
+
+The preprocessing of short bone masks involves subtracting the carpal and wrist crops from the full-hand image, which is done after appropriate mask post-processing [README.md:28]. 
+
+In this specific project, the mask post-processing is performed using the `segment_crops.py` script [README.md:28]. This script is used to generate the carpal and wrist crops of Indian X-ray images, which are then subtracted from the full-hand image to obtain the shortbones crop of the image [README.md:28]. 
+
+Therefore, the short bone masks are preprocessed using the `segment_crops.py` script to generate the short-bone segments [README.md:28].
+
+Time taken: 0.03 mins
+
+Q2:What are the post-processing steps in generating carpel crops?
+Ans:Keywords: ['post-processing', ' steps', ' generating', ' carpel', ' crops']
+Unique results: 26
+
+Answer:
+The post-processing steps in generating carpal crops involve enhancing the image quality and refining the segmentation masks to accurately delineate the regions of interest. In plain English, this means that after the initial segmentation, the generated masks may contain noise or imperfections that need to be removed or corrected to obtain precise carpal crops. 
+
+In the context of this project, the post-processing steps include morphological operations such as erosion and dilation, as well as histogram equalization [data sheet 1.pdf: page 2]. Morphological operations help to remove or add pixels from the object edges, suppressing residual noise and restoring the structural integrity of the segmented contours [data sheet 1.pdf: page 2]. Histogram equalization, on the other hand, enhances the image's contrast by uniformly distributing the intensity, bringing more image details to light and facilitating more accurate ROI identification [data sheet 1.pdf: page 3]. 
+
+These post-processing techniques are applied to the generated masks to refine them and produce accurate carpal crops, which are then used for subsequent age prediction [data sheet 1.pdf: page 2]. The specific implementation of these steps can be found in the provided code and supplementary materials [README.md:43].
+
+Time taken: 0.03 mins
+
+Q3:How were the segmental GP labels assigned to each image?
+Ans:Keywords: ['GP', ' labels', ' image', ' segmental']
+Unique results: 248
+
+Answer:
+The segmental GP labels were assigned to each image by first segmenting the carpals and wrist region of the X-ray images using two separate segmentation models with a Unet backbone [README.md:31]. These models were trained on an open-access dataset and fine-tuned on an Indian dataset. The carpal and wrist crops were then generated and subtracted from the full-hand image to obtain the shortbones crop [README.md:31]. The bone age prediction models, which have a densenet161 backbone, were trained independently for each segment (full-hand, shortbones, carpals, and wrist) [README.md:49]. The segmental predictions were then equally weighted and rounded off to their nearest GP class to assign the segmental GP labels [README.md:49]. This process is part of the Segmental Greulich-Pyle (SGP) method, which takes into account the maturation variation of different segments of the hand to report a more appropriate bone age [README.md:18].
+
+Time taken: 0.02 mins
+
+Q4: What are the statistics of the HCJBA dataset?
+Keywords: ['statistics', ' HCJBA', ' dataset']
+Unique results: 70
+
+Answer:
+The HCJBA dataset consists of hand X-ray images of Indian children, and its key statistics are as follows: 
+The dataset is divided into male and female subsets, with the male subset having 1,250 images, a mean bone age of 80.2 months, and an age range of 36-216 months. 
+The female subset has 1,180 images, a mean bone age of 101.4 months, and an age range of 36-216 months [fendo-17-1757571.pdf: page 3, Line: 1137]. 
+The dataset was further split into training and validation subsets, with the male subset being split into 1,071 training and 179 validation samples, and the female subset into 1,011 training and 169 validation samples [fendo-17-1757571.pdf: page 3, Line: 1137]. 
+These statistics are summarized in Table 1, which provides an overview of the dataset's composition and age range [fendo-17-1757571.pdf: page 3, Line: 1172].
+
+Time taken: 0.03 mins
+
+Q5: What MAD values did the transfer-learned full-hand model achieve on the HCJBA dataset?
+Keywords: ['MAD', ' values', ' transfer-learned', ' full-hand', ' model']
+Unique results: 273
+
+Answer:
+The Mean Absolute Deviation (MAD) is a measure of the average difference between predicted and actual values, used to evaluate the performance of models. In the context of bone age assessment, MAD values represent the average absolute error between the model's predicted bone age and the actual bone age. 
+
+In this specific project, the transfer-learned full-hand model achieved MAD values of 5.7 months for males and 5.9 months for females, as shown in Table 1 [README.md:55]. These values indicate the average absolute difference between the model's predicted bone age and the actual bone age for the full-hand model on the given dataset. [fendo-17-1757571.pdf:1049]
+
+Time taken: 0.02 mins
