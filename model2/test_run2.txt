@@ -60,3 +60,16 @@ The Mean Absolute Deviation (MAD) is a measure of the average difference between
 In this specific project, the transfer-learned full-hand model achieved MAD values of 5.7 months for males and 5.9 months for females, as shown in Table 1 [README.md:55]. These values indicate the average absolute difference between the model's predicted bone age and the actual bone age for the full-hand model on the given dataset. [fendo-17-1757571.pdf:1049]
 
 Time taken: 0.02 mins
+
+Q6: What is the difference between the scoring system in this method and the standard GP method used by a doctor? What can I expect to be the same and what to be different
+Keywords: ['difference', ' scoring', ' system', ' method', ' doctor']
+Unique results: 8
+
+Answer:
+The Segmental Greulich-Pyle (SGP) method used in this project differs from the standard Greulich-Pyle (GP) method in how it scores bone age. In the standard GP method, a doctor compares a child's full-hand X-ray to reference radiographs to assign a single bone age [[README.md:17](http://readme.md:17/)]. However, this method can be time-consuming and prone to inter- and intra-observer variability [[README.md:15](http://readme.md:15/)].
+
+In contrast, the SGP method divides the full hand into three meaningful anatomical segments based on their maturational variation, namely, Shortbones (Metacarpal and Phalanges), Carpals, and Wrist (Radius and Ulna) [[README.md:20](http://readme.md:20/)]. The SGP method then determines the segmental bone ages for each of these segments and combines them to report a more appropriate bone age of the child [[README.md:20](http://readme.md:20/)]. This is different from the standard GP method, which only provides a single bone age for the full hand [[README.md:17](http://readme.md:17/)].
+
+You can expect the following to be the same: both methods use the Greulich-Pyle atlas as a reference for bone age assessment [[README.md:18](http://readme.md:18/)]. You can expect the following to be different: the SGP method takes into account the maturation variation of different segments of the hand, whereas the standard GP method does not [[README.md:20](http://readme.md:20/)]. Additionally, the SGP method is automated and uses AI to assess bone age, whereas the standard GP method is manual and requires expert clinicians [[README.md:49](http://readme.md:49/)]. Overall, the SGP method is designed to provide a more accurate and reliable bone age assessment than the standard GP method [[README.md:55](http://readme.md:55/)].
+
+Time taken: 0.03 mins
