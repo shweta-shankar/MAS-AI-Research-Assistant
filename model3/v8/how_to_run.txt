@@ -1,0 +1,10 @@
+Guide to run the digiBONE Assistant
+
+run the following in 1 terminal window:-
+python -m uvicorn api_v8:app --reload
+
+keep this running. while that runs, run the following on another:-
+cd frontend
+npm run dev
+
+

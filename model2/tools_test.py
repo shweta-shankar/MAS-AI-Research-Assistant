@@ -1,14 +1,43 @@
 #!/usr/bin/python
 
-from config import file_path, llm_model
+from config import file_path, llm_model, pdf1, pdf2
 import requests
 import time
+import pdfplumber
+
+#-----------------------------------------------------------------------------------
 
 start=time.time()
 
+#-----------------------------------------------------------------------------------
+# For loading the pdf
+
+def load_pdf(pdf_path):
+    lines = []
+    with pdfplumber.open(pdf_path) as pdf:
+        for i, page in enumerate(pdf.pages):
+            text = page.extract_text()
+            if text:
+                # Add a FILE: header so our search function knows the source
+                lines.append(f"================================================\n")
+                lines.append(f"FILE: {pdf_path} (page {i+1})\n")
+                lines.append(f"================================================\n")
+                for line in text.splitlines(keepends=True):
+                    lines.append(line)
+    return lines
+
+
+#----------------------------------------------------------------------------------
+# Parsing the files
+
 with open(file_path, "r", encoding ="utf-8") as f:
     lines= f.readlines()
-    
+
+lines += load_pdf(pdf1)
+lines += load_pdf(pdf2)
+
+#-----------------------------------------------------------------------------------
+# Search tool for llm  
 
 def search(query, lines):
     results=[]
@@ -37,6 +66,9 @@ def search(query, lines):
 
     return results
 
+#-----------------------------------------------------------------------------------
+# Setting the parameters of LLM
+
 def call_ollama(prompt):
     response = requests.post("http://localhost:11434/api/generate", json={
         "model": llm_model,
@@ -44,6 +76,9 @@ def call_ollama(prompt):
         "stream": False
     })
     return response.json()["response"]
+
+#-----------------------------------------------------------------------------------
+# Extracting keywords from query using LLM
 
 def extract_words(question):
     prompt = f"""Extract 3-5 keywords strictly from the question below.
@@ -54,6 +89,9 @@ Return ONLY a comma separated list, nothing else.
 Question: {question}
 """
     return call_ollama(prompt).split(",")
+
+#-----------------------------------------------------------------------------------
+# This is to check if result context generated is relevant to question or not
 
 def filter_results(results, question):
     question_words = set(question.lower().replace("-","").replace(" ","").split())
@@ -66,6 +104,8 @@ def filter_results(results, question):
     scored.sort(key=lambda x: x[0], reverse=True)
     return [r for score, r in scored[:8]]  # only top 8
 
+#-------------------------------------------------------------------------------------
+# Setting up the query answering LLM
 
 def ask_llm(question, search_results):
     context = ""
@@ -91,8 +131,11 @@ Question: {question}
     
     return call_ollama(prompt)
 
-    
-question = "I am a computer vision expert. Explain what segmentation models are."
+#-------------------------------------------------------------------------------------
+######################################################################################
+#Querying
+
+question = "How are short bone masks preprossed to generate short-bone segments?"
 keywords = extract_words(question)
 print("Keywords:", keywords)
 
@@ -100,13 +143,15 @@ results=[]
 
 for keyword in keywords:
     results += search(keyword, lines)
-
+    
+#-----------------------------------------------------------------------------------
 #for r in results:
 #    print(r["file"], "| line:", r["line_number"])
 #    print(r["snippet"][:100])
 #    print("---")
+#------------------------------------------------------------------------------------
     
-# deduplicate
+# Removing deduplicates
 seen = set()
 unique_results = []
 for r in results:
@@ -121,5 +166,10 @@ filtered_results = filter_results(unique_results, question)
 answer = ask_llm(question, filtered_results)
 print(answer)
 
+#-----------------------------------------------------------------------------------
+
 end = time.time()
 print(f"Time taken: {(end - start)/60:.2f} mins")
+
+#-----------------------------------------------------------------------------------
+####################################################################################
