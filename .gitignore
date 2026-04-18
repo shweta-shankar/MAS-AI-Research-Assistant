@@ -1,1 +1,4 @@
 model3/v8/groq_api_key.env
+__pycache__/
+*.pyc
+*.db
